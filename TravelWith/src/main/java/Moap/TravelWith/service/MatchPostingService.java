@@ -35,8 +35,15 @@ public class MatchPostingService {
     }
     @Transactional
     public void writeMatchPosting(MatchPostingWrite matchPostingWrite, Long memberId){
+
         Member writer = memberRepository.findMemberById(memberId);
+        if (writer == null){
+            throw new RuntimeException("No member Exception");
+        }
         MatchPosting matchPosting = MatchPostingWrite.entityToDTO(matchPostingWrite);
+        if (matchPosting == null){
+            throw new RuntimeException("No matchPosting Exception");
+        }
         matchPostingRepository.joinMatchPosting(matchPosting);
         MatchStatus matchStatus = MatchStatus.makeEntity(writer, matchPosting, MatchRole.HOST);
         matchPostingRepository.joinMatchStatus(matchStatus);
@@ -47,10 +54,13 @@ public class MatchPostingService {
     @Transactional
     public void joinMatch(Long memberId, Long matchPostingId){
         Member member = memberRepository.findMemberById(memberId);
+        if (member == null){
+            throw new RuntimeException("No member Exception");
+        }
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchPostingId);
-        log.info("--------------------------");
-        log.info(matchPosting.toString());
-        log.info(matchPostingRepository.findMatchPeoplesNumber(matchPosting).toString());
+        if (matchPosting == null){
+            throw new RuntimeException("No matchPosting Exception");
+        }
         if( matchPostingRepository.findMatchPeoplesNumber(matchPosting)>= matchPosting.getNumOfPeoples()){
             throw new RuntimeException("자리가 꽉 찼습니다");
         }
