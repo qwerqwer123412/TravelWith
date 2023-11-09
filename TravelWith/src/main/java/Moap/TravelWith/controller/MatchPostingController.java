@@ -2,12 +2,17 @@ package Moap.TravelWith.controller;
 
 
 import Moap.TravelWith.dto.MatchPostingWrite;
+import Moap.TravelWith.dto.PostingSearchDto;
+import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.service.MatchPostingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/matchPosting")
@@ -36,5 +41,22 @@ public class MatchPostingController {
         return ResponseEntity.ok("join완료");
 
     }
+
+    @GetMapping("/search")
+    public List<MatchPosting> search(
+            @RequestParam(name = "startDate", required = false) LocalDate startDate,
+            @RequestParam(name = "endDate", required = false) LocalDate endDate,
+            @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "money", required = false) Integer money) {
+
+        PostingSearchDto dto = PostingSearchDto.builder()
+                .startDate(startDate)
+                .endDate(endDate)
+                .money(money)
+                .query(query)
+                .build();
+        return matchPostingService.searchMatchPosting(dto);
+    }
+
 
 }

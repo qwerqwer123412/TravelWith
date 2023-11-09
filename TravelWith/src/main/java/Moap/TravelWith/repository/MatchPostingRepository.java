@@ -1,14 +1,21 @@
 package Moap.TravelWith.repository;
 
 
+import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.MatchStatus;
 import Moap.TravelWith.entity.QMatchPosting;
 import Moap.TravelWith.entity.QMatchStatus;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.DateExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,6 +53,29 @@ public class MatchPostingRepository {
                 .where(qMatchPosting.eq(matchPosting)).fetch().size();
 
     }
+
+
+
+    public List<MatchPosting> findMatchPosting(PostingSearchDto postingSearchDto){
+        LocalDate startDate = postingSearchDto.getStartDate();
+        LocalDate endDate = postingSearchDto.getEndDate();
+        String query = postingSearchDto.getQuery();
+        Integer money = postingSearchDto.getMoney();
+        List<MatchPosting> fetch = jqf.selectFrom(qMatchPosting)
+                .where(qMatchPosting.endDate.between(startDate, endDate)
+                        .or(qMatchPosting.startDate.between(startDate, endDate))
+                        .and(qMatchPosting.title.like("%" + query + "%"))
+                        .and(qMatchPosting.travelExpenses.lt(money))
+                        .and(qMatchPosting.endDate.lt(LocalDate.now())))
+                .fetch();
+
+
+        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+    }
+
+
+
+
 
 
 }

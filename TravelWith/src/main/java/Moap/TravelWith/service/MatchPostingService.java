@@ -2,6 +2,7 @@ package Moap.TravelWith.service;
 
 
 import Moap.TravelWith.dto.MatchPostingWrite;
+import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.MatchStatus;
 import Moap.TravelWith.entity.Member;
@@ -13,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -67,6 +72,16 @@ public class MatchPostingService {
         MatchStatus matchStatus = MatchStatus.makeEntity(member, matchPosting, MatchRole.PARTICIPANT);
 
         matchPostingRepository.joinMatchStatus(matchStatus);
+
+
+    }
+
+    public List<MatchPosting> searchMatchPosting(PostingSearchDto postingSearchDto){
+        postingSearchDto.setStartDate(Optional.ofNullable(postingSearchDto.getStartDate()).orElse(LocalDate.of(1900, 1, 1)));
+        postingSearchDto.setEndDate(Optional.ofNullable(postingSearchDto.getEndDate()).orElse(LocalDate.of(2200, 1, 1)));
+        postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
+        postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
+        return matchPostingRepository.findMatchPosting(postingSearchDto);
 
 
     }
