@@ -6,12 +6,10 @@ import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.MatchStatus;
 import Moap.TravelWith.entity.QMatchPosting;
 import Moap.TravelWith.entity.QMatchStatus;
-import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.DateExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -19,6 +17,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 //matchPosting이랑 matchStatus를 같이 관리합니다..
 public class MatchPostingRepository {
 
@@ -27,7 +26,6 @@ public class MatchPostingRepository {
     private final JPAQueryFactory jqf;
     private final QMatchPosting qMatchPosting = new QMatchPosting("qm");
     private final QMatchStatus qMatchStatus = new QMatchStatus("qMatchStatus");
-
 
 
     public void joinMatchPosting(MatchPosting matchPosting) {
@@ -55,8 +53,7 @@ public class MatchPostingRepository {
     }
 
 
-
-    public List<MatchPosting> findMatchPosting(PostingSearchDto postingSearchDto){
+    public List<MatchPosting> findMatchPosting(PostingSearchDto postingSearchDto) {
         LocalDate startDate = postingSearchDto.getStartDate();
         LocalDate endDate = postingSearchDto.getEndDate();
         String query = postingSearchDto.getQuery();
@@ -66,16 +63,14 @@ public class MatchPostingRepository {
                         .or(qMatchPosting.startDate.between(startDate, endDate))
                         .and(qMatchPosting.title.like("%" + query + "%"))
                         .and(qMatchPosting.travelExpenses.lt(money))
-                        .and(qMatchPosting.endDate.lt(LocalDate.now())))
+                        .and(qMatchPosting.endDate.gt(LocalDate.now())))
                 .fetch();
 
-
-        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        log.info(String.valueOf(fetch.size()));
+        List<MatchPosting> result = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        log.info(String.valueOf(result.size()));
+        return result;
     }
-
-
-
-
 
 
 }
