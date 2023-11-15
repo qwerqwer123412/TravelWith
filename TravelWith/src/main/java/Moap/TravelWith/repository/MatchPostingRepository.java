@@ -2,10 +2,7 @@ package Moap.TravelWith.repository;
 
 
 import Moap.TravelWith.dto.PostingSearchDto;
-import Moap.TravelWith.entity.MatchPosting;
-import Moap.TravelWith.entity.MatchStatus;
-import Moap.TravelWith.entity.QMatchPosting;
-import Moap.TravelWith.entity.QMatchStatus;
+import Moap.TravelWith.entity.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,6 +24,8 @@ public class MatchPostingRepository {
     private final JPAQueryFactory jqf;
     private final QMatchPosting qMatchPosting = new QMatchPosting("qm");
     private final QMatchStatus qMatchStatus = new QMatchStatus("qMatchStatus");
+    private final QMember qMember = new QMember("member");
+    private final QAssessment qAssessment = new QAssessment("a");
 
 
     public void joinMatchPosting(MatchPosting matchPosting) {
@@ -35,6 +35,11 @@ public class MatchPostingRepository {
     public void joinMatchStatus(MatchStatus matchStatus) {
         em.persist(matchStatus);
     }
+
+    public void joinAsessment(Assessment assessment){
+        em.persist(assessment);
+    }
+
 
     public MatchPosting findMatchPostingById(Long matchPostingId) {
         return em.find(MatchPosting.class, matchPostingId);
@@ -66,11 +71,27 @@ public class MatchPostingRepository {
                         .and(qMatchPosting.endDate.gt(LocalDate.now())))
                 .fetch();
 
-        log.info(String.valueOf(fetch.size()));
         List<MatchPosting> result = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
-        log.info(String.valueOf(result.size()));
         return result;
     }
 
+    //내가 참여한 모든 종료된(성사된) matchPosting 작성
+    public List<MatchPosting> findAllEndedMatchPosting(Long memberId){
+        List<MatchStatus> fetch = jqf.selectFrom(qMatchStatus).where(qMatchStatus.member.id.eq(memberId)).fetch();
+        List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
+        return list.stream().filter((i) -> i.getNumOfPeoples() >= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
+    }
 
+    public List<Member> findEndMatchingJoiner(MatchPosting matchPosting){
+        return jqf.select(qMatchStatus.member).from(qMatchStatus)
+                .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
+                .where(qMatchPosting.eq(matchPosting)).fetch();
+    }
+    public List<Assessment> findAsessment(Member evaluator, Member assessedMember, MatchPosting matchPosting){
+
+        return jqf.select(qAssessment).from(qAssessment)
+                .where(qAssessment.receiver.eq(assessedMember)
+                        .and(qAssessment.evaluator.eq(evaluator))
+                        .and(qAssessment.matchPosting.eq(matchPosting))).fetch();
+    }
 }

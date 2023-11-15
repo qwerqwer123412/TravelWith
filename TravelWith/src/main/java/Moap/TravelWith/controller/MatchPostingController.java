@@ -1,10 +1,13 @@
 package Moap.TravelWith.controller;
 
 
+import Moap.TravelWith.dto.AssessmentSendsDTO;
 import Moap.TravelWith.dto.MatchPostingWrite;
 import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.entity.MatchPosting;
+import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.service.MatchPostingService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/matchPosting")
+@RequestMapping("/match-posting")
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Slf4j
 public class MatchPostingController {
@@ -27,7 +30,6 @@ public class MatchPostingController {
                                           @PathVariable Long memberId) {
 
         matchPostingService.writeMatchPosting(matchPostingWrite, memberId);
-        log.info(matchPostingWrite.toString());
 
         return ResponseEntity.ok("글 작성 완료");
 
@@ -58,5 +60,26 @@ public class MatchPostingController {
         return matchPostingService.searchMatchPosting(dto);
     }
 
+
+    @GetMapping("/ended-match/{memberId}")
+    public List<MatchPosting> endedMatch(@PathVariable Long memberId){
+
+        return matchPostingService.findEndedMyMatchPosting(memberId);
+    }
+
+    @GetMapping("/ended-match/{memberId}/{matchId}")
+    public List<Member> endedMatchMembers(
+            @PathVariable Long memberId,
+            @PathVariable Long matchId){
+        return matchPostingService.findMatchPostingMembers(matchId);
+    }
+
+    @PostMapping("/ended-match/assessment/{memberId}/{matchId}/{assessedMemberId}/{points}")
+    public String assessment(@RequestBody
+                             AssessmentSendsDTO dto){
+        matchPostingService.assessMember(dto.getMemberId(), dto.getAssessedMemberId(), dto.getMatchId()
+                ,dto.getPoints());
+        return "평가 성공";
+    }
 
 }
