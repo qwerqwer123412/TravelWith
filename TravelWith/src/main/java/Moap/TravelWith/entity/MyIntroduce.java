@@ -19,10 +19,17 @@ public class MyIntroduce {
     private Member member;
 
     private String title;
-    private String Contents;
+    private String contents;
 
+    public void setMember(Member member) {
+        this.member = member;
+    }
 
-    //여행 선호 사항
-    //관심사
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
+    public void setContents(String contents) {
+        this.contents = contents;
+    }
 }
