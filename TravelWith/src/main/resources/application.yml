@@ -1,0 +1,44 @@
+
+#용현님꺼
+## 서버 포트 설정
+#server:
+#  port: 8081
+#
+## database 연동 설정
+#spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/travelwith?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+#    username: root
+#    password: 1q2w3e4r
+#  thymeleaf:
+#    cache: false
+#
+#  # spring data jpa 설정
+#  jpa:
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+#    open-in-view: false
+#    show-sql: true
+#    hibernate:
+#      ddl-auto: update
+
+#민준
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/travelwith
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        # show_sql: true
+        #format_sql: true
+        #전부
+        default_lazy_behavior: proxy
+
+logging.level:
+  org.hibernate.SQL: info
+  org.hibernate.orm.jdbc.bind: info #스프링 부트 3.x, hibernate6

@@ -38,7 +38,7 @@ public class MatchPostingController {
     @PostMapping("/join/{memberId}/{matchPostingId}")
     public ResponseEntity<String> joining(@PathVariable Long memberId,
                                           @PathVariable Long matchPostingId) {
-        log.info("hi");
+
         matchPostingService.joinMatch(memberId, matchPostingId);
         return ResponseEntity.ok("join완료");
 
@@ -74,9 +74,10 @@ public class MatchPostingController {
         return matchPostingService.findMatchPostingMembers(matchId);
     }
 
-    @PostMapping("/ended-match/assessment/{memberId}/{matchId}/{assessedMemberId}/{points}")
+    @PostMapping("/ended-match/assessment")
     public String assessment(@RequestBody
                              AssessmentSendsDTO dto){
+        log.info(String.valueOf(dto));
         matchPostingService.assessMember(dto.getMemberId(), dto.getAssessedMemberId(), dto.getMatchId()
                 ,dto.getPoints());
         return "평가 성공";

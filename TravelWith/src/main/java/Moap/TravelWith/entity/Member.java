@@ -32,7 +32,7 @@ public class Member {
 
 
     //생략 가능..
-    private Nationality nationality;
+    //private Nationality nationality;
 
 }
 

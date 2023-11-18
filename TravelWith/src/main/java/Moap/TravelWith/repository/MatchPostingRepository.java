@@ -64,13 +64,12 @@ public class MatchPostingRepository {
         String query = postingSearchDto.getQuery();
         Integer money = postingSearchDto.getMoney();
         List<MatchPosting> fetch = jqf.selectFrom(qMatchPosting)
-                .where(qMatchPosting.endDate.between(startDate, endDate)
-                        .or(qMatchPosting.startDate.between(startDate, endDate))
+                .where(qMatchPosting.endDate.lt(endDate)
+                        .and(qMatchPosting.startDate.gt(startDate))
                         .and(qMatchPosting.title.like("%" + query + "%"))
-                        .and(qMatchPosting.travelExpenses.lt(money))
-                        .and(qMatchPosting.endDate.gt(LocalDate.now())))
+                        .and(qMatchPosting.travelExpenses.lt(money)))
                 .fetch();
-
+        log.info(String.valueOf(fetch.size()));
         List<MatchPosting> result = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
         return result;
     }
@@ -79,7 +78,7 @@ public class MatchPostingRepository {
     public List<MatchPosting> findAllEndedMatchPosting(Long memberId){
         List<MatchStatus> fetch = jqf.selectFrom(qMatchStatus).where(qMatchStatus.member.id.eq(memberId)).fetch();
         List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
-        return list.stream().filter((i) -> i.getNumOfPeoples() >= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
+        return list.stream().filter((i) -> i.getNumOfPeoples() <= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
     }
 
     public List<Member> findEndMatchingJoiner(MatchPosting matchPosting){
