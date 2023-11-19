@@ -40,12 +40,13 @@ public class MatchPostingService {
 
     }
     @Transactional
-    public void writeMatchPosting(MatchPostingWrite matchPostingWrite, Long memberId){
+    public void writeMatchPosting(MatchPostingWrite matchPostingWrite, String memberEmail){
 
-        Member writer = memberRepository.findMemberById(memberId);
-        if (writer == null){
+        Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
+        if (!byEmail.isPresent()){
             throw new RuntimeException("No member Exception");
         }
+        Member writer = byEmail.get();
         MatchPosting matchPosting = MatchPostingWrite.entityToDTO(matchPostingWrite);
         if (matchPosting == null){
             throw new RuntimeException("No matchPosting Exception");
@@ -58,11 +59,13 @@ public class MatchPostingService {
 
     //여기까지 posting글 작성
     @Transactional
-    public void joinMatch(Long memberId, Long matchPostingId){
-        Member member = memberRepository.findMemberById(memberId);
-        if (member == null){
+    public void joinMatch(String email, Long matchPostingId){
+        Optional<Member> byEmail = memberRepository.findByEmail(email);
+
+        if (!byEmail.isPresent()){
             throw new RuntimeException("No member Exception");
         }
+        Member member = byEmail.get();
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchPostingId);
         if (matchPosting == null){
             throw new RuntimeException("No matchPosting Exception");
@@ -88,8 +91,13 @@ public class MatchPostingService {
     }
 
     //종료된 매칭글 찾아주기
-    public List<MatchPosting> findEndedMyMatchPosting(Long memberId){
-        return  matchPostingRepository.findAllEndedMatchPosting(memberId);
+    public List<MatchPosting> findEndedMyMatchPosting(String memberEmail){
+        Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
+        if(byEmail.isEmpty()){
+            throw new RuntimeException("No memberFind Exception");
+        }
+        Member member = byEmail.get();
+        return  matchPostingRepository.findAllEndedMatchPosting(member.getId());
     }
 
     public List<Member> findMatchPostingMembers(Long matchId){

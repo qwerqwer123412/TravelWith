@@ -14,4 +14,11 @@ public class GlobalExceptionHandler {
         log.info(e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+
+    @ExceptionHandler(NoLoginMemberFoundException.class)
+    public ResponseEntity<String> handleNoLoginMemberException(NoLoginMemberFoundException e) {
+        log.info(e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
 }

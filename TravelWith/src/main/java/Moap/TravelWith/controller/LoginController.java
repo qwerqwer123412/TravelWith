@@ -1,9 +1,13 @@
 package Moap.TravelWith.controller;
 
 import Moap.TravelWith.dto.MemberDTO;
+import Moap.TravelWith.entity.LoginCheck;
 import Moap.TravelWith.entity.Member;
+import Moap.TravelWith.exception.NoLoginMemberFoundException;
+import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.repository.MemberRepository;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,28 +17,26 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class LoginController {
 
     private final MemberRepository memberRepository;
+    private final LoginCheckRepository loginCheckRepository;
 
-    @Autowired
-    public LoginController(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
 
     //로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         Optional<Member> member = memberRepository.findByEmail(loginRequest.getEmail());
 
         if (!member.isPresent()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login Failed: User not found.");
         }
-
         if (member.get().getPassword().equals(loginRequest.getPassword())) {
+            LoginCheck loginCheck = new LoginCheck(loginRequest.email);
+            loginCheckRepository.findLoginCheckByEmail(loginRequest.email).orElseGet(() -> loginCheckRepository.save(loginCheck));
             // 인증 성공, 세션에 사용자 ID 저장
-            session.setAttribute("memberId", member.get().getId());
-            return ResponseEntity.ok().body("Login Successful");
+            return ResponseEntity.ok().body(loginRequest.getEmail());
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login Failed: Incorrect password.");
         }
@@ -42,8 +44,9 @@ public class LoginController {
 
     //로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate();
+    public ResponseEntity<?> logout(@RequestHeader String email) {
+        loginCheck(email);
+        loginCheckRepository.findLoginCheckByEmail(email).orElseThrow(() -> new RuntimeException("no MemberFindException"));
         return ResponseEntity.ok().body("Logged out successfully.");
     }
 
@@ -71,7 +74,8 @@ public class LoginController {
 
     // 로그인 사용자 인식 - 테스트용
     @GetMapping("/current-user")
-    public ResponseEntity<?> getCurrentUser(HttpSession session) {
+    public ResponseEntity<?> getCurrentUser(HttpSession session, @RequestHeader String email) {
+        loginCheck(email);
         Long memberId = (Long) session.getAttribute("memberId");
 
         if (memberId == null) {
@@ -85,6 +89,12 @@ public class LoginController {
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
             }
+        }
+    }
+
+    private void loginCheck(String email){
+        if (!loginCheckRepository.findLoginCheckByEmail(email).isPresent()){
+            throw new NoLoginMemberFoundException("로그인 한 회원이 존재하지 않습니다");
         }
     }
 }

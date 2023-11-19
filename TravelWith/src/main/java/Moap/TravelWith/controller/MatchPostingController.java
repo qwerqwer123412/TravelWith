@@ -6,8 +6,9 @@ import Moap.TravelWith.dto.MatchPostingWrite;
 import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.Member;
+import Moap.TravelWith.exception.NoLoginMemberFoundException;
+import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.service.MatchPostingService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,22 +25,27 @@ import java.util.List;
 public class MatchPostingController {
 
     private final MatchPostingService matchPostingService;
+    private final LoginCheckRepository loginCheckRepository;
 
-    @PostMapping("/write/{memberId}")
+    @PostMapping("/write")
     public ResponseEntity<String> writing(@RequestBody MatchPostingWrite matchPostingWrite,
-                                          @PathVariable Long memberId) {
+                                          @RequestHeader String email
 
-        matchPostingService.writeMatchPosting(matchPostingWrite, memberId);
+    ) {
+        loginCheck(email);
+        matchPostingService.writeMatchPosting(matchPostingWrite, email);
 
         return ResponseEntity.ok("글 작성 완료");
 
     }
 
-    @PostMapping("/join/{memberId}/{matchPostingId}")
-    public ResponseEntity<String> joining(@PathVariable Long memberId,
-                                          @PathVariable Long matchPostingId) {
+    @PostMapping("/join/{matchPostingId}")
+    public ResponseEntity<String> joining(
+                                          @PathVariable Long matchPostingId,
+                                          @RequestHeader String email) {
 
-        matchPostingService.joinMatch(memberId, matchPostingId);
+        loginCheck(email);
+        matchPostingService.joinMatch(email, matchPostingId);
         return ResponseEntity.ok("join완료");
 
     }
@@ -49,7 +55,9 @@ public class MatchPostingController {
             @RequestParam(name = "startDate", required = false) LocalDate startDate,
             @RequestParam(name = "endDate", required = false) LocalDate endDate,
             @RequestParam(name = "query", required = false) String query,
-            @RequestParam(name = "money", required = false) Integer money) {
+            @RequestParam(name = "money", required = false) Integer money
+            , @RequestHeader String email) {
+        loginCheck(email);
 
         PostingSearchDto dto = PostingSearchDto.builder()
                 .startDate(startDate)
@@ -61,26 +69,36 @@ public class MatchPostingController {
     }
 
 
-    @GetMapping("/ended-match/{memberId}")
-    public List<MatchPosting> endedMatch(@PathVariable Long memberId){
-
-        return matchPostingService.findEndedMyMatchPosting(memberId);
+    @GetMapping("/ended-match")
+    public List<MatchPosting> endedMatch(@RequestHeader String email) {
+        loginCheck(email);
+        return matchPostingService.findEndedMyMatchPosting(email);
     }
 
-    @GetMapping("/ended-match/{memberId}/{matchId}")
+    @GetMapping("/ended-match/{matchId}")
     public List<Member> endedMatchMembers(
-            @PathVariable Long memberId,
-            @PathVariable Long matchId){
+            @PathVariable Long matchId,
+            @RequestHeader String email) {
+        loginCheck(email);
         return matchPostingService.findMatchPostingMembers(matchId);
     }
 
     @PostMapping("/ended-match/assessment")
     public String assessment(@RequestBody
-                             AssessmentSendsDTO dto){
+                             AssessmentSendsDTO dto, @RequestHeader String email) {
+
+        loginCheck(email);
         log.info(String.valueOf(dto));
         matchPostingService.assessMember(dto.getMemberId(), dto.getAssessedMemberId(), dto.getMatchId()
-                ,dto.getPoints());
+                , dto.getPoints());
         return "평가 성공";
+    }
+
+
+    private void loginCheck(String email) {
+        if (loginCheckRepository.findLoginCheckByEmail(email).isEmpty()) {
+            throw new NoLoginMemberFoundException("로그인 한 회원이 존재하지 않습니다");
+        }
     }
 
 }
