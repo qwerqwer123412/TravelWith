@@ -11,6 +11,7 @@ import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.repository.MemberRepository;
 import Moap.TravelWith.repository.MyIntroduceRepository;
 import Moap.TravelWith.service.MyIntroduceService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

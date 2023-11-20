@@ -58,7 +58,6 @@ public class MatchPostingController {
             @RequestParam(name = "money", required = false) Integer money
             , @RequestHeader String email) {
         loginCheck(email);
-
         PostingSearchDto dto = PostingSearchDto.builder()
                 .startDate(startDate)
                 .endDate(endDate)
