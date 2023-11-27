@@ -33,7 +33,7 @@ public class QMember extends EntityPathBase<Member> {
 
     public final StringPath phoneNumber = createString("phoneNumber");
 
-    public final StringPath profileImg = createString("profileImg");
+    public final ArrayPath<byte[], Byte> profileImg = createArray("profileImg", byte[].class);
 
     public QMember(String variable) {
         super(Member.class, forVariable(variable));

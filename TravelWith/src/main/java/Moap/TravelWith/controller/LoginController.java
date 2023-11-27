@@ -72,6 +72,7 @@ public class LoginController {
         }
     }
 
+    /*
     // 로그인 사용자 인식 - 테스트용
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(HttpSession session, @RequestHeader String email) {
@@ -91,6 +92,8 @@ public class LoginController {
             }
         }
     }
+    */
+
 
     private void loginCheck(String email){
         if (!loginCheckRepository.findLoginCheckByEmail(email).isPresent()){

@@ -4,11 +4,14 @@ package Moap.TravelWith.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 public class Message {
 
@@ -30,7 +33,7 @@ public class Message {
 
     private String contents;
 
-    private LocalDate sendTime;
+    private LocalDateTime sendTime;
 
 
 }

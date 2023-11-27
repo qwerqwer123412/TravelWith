@@ -10,7 +10,7 @@ public class MemberDTO {
     private String email;
     private String name;
     private String phoneNumber;
-    private String profileImg;
+    private byte[] profileImg;
     private LocalDate birthDate;
     private Gender gender;
 
@@ -52,11 +52,11 @@ public class MemberDTO {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getProfileImg() {
+    public byte[] getProfileImg() {
         return profileImg;
     }
 
-    public void setProfileImg(String profileImg) {
+    public void setProfileImg(byte[] profileImg) {
         this.profileImg = profileImg;
     }
 

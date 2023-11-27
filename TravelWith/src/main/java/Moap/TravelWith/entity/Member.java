@@ -27,7 +27,7 @@ public class Member {
     private String password;
     private String name;
     private String phoneNumber;
-    private String profileImg;
+    private byte[] profileImg;
     private LocalDate birthDate;
 
     private Gender gender;

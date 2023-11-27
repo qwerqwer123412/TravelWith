@@ -30,7 +30,7 @@ public class QMessage extends EntityPathBase<Message> {
 
     public final QMember sender;
 
-    public final DatePath<java.time.LocalDate> sendTime = createDate("sendTime", java.time.LocalDate.class);
+    public final DateTimePath<java.time.LocalDateTime> sendTime = createDateTime("sendTime", java.time.LocalDateTime.class);
 
     public final StringPath title = createString("title");
 
