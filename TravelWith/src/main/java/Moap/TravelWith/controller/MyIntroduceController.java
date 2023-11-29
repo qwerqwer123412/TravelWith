@@ -53,13 +53,13 @@ public class MyIntroduceController {
         }
     }
 
-    //해당 id 자기소개글 클릭시 이동
+    //해당 자기소개글 클릭시 자기소개글로 이동
     @GetMapping("/{memberId}")
     public ResponseEntity<MyIntroduceResponseDTO> getMyIntroduce(@PathVariable Long memberId,
                                                                  @RequestHeader String email) {
 
         loginCheck(email);
-        Optional<Member> memberOpt = memberRepository.findByEmail(email);
+        Optional<Member> memberOpt = memberRepository.findById(memberId);
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
             Optional<MyIntroduce> myIntroduceOpt = myIntroduceRepository.findByMember(member);
@@ -84,6 +84,10 @@ public class MyIntroduceController {
         }
 
     }
+
+
+
+
 
     // 자기소개글 리스트 (id까지 보여주는게 좋을듯) -> 클릭해서 바로 이입
     @GetMapping("/list")
