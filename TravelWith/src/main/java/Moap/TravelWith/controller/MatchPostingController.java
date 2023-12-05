@@ -6,6 +6,7 @@ import Moap.TravelWith.dto.MatchPostingWrite;
 import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.dto.match_response.MatchResponse;
 import Moap.TravelWith.dto.match_response.MatchResponseDetail;
+import Moap.TravelWith.dto.match_response.MemberInfoDTO;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
@@ -95,11 +96,12 @@ public class MatchPostingController {
     }
 
     @GetMapping("/ended-match/{matchId}")
-    public List<Member> endedMatchMembers(
+    public List<MemberInfoDTO> endedMatchMembers(
             @PathVariable Long matchId,
             @RequestHeader String email) {
         loginCheck(email);
-        return matchPostingService.findMatchPostingMembers(matchId);
+        List<Member> matchPostingMembers = matchPostingService.findMatchPostingMembers(matchId);
+        return matchPostingMembers.stream().map(MemberInfoDTO::entityToDto).toList();
     }
 
     @PostMapping("/ended-match/assessment")

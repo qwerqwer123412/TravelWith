@@ -103,11 +103,14 @@ public class MatchPostingRepository {
 
 
     public List<Member> findHost(MatchPosting matchPosting){
-        return jqf.select(qMatchStatus.member).from(qMatchStatus)
+        List<Member> fetch = jqf.select(qMatchStatus.member).from(qMatchStatus)
                 .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
                 .where(qMatchPosting.eq(matchPosting).and(qMatchStatus.role.eq(MatchRole.HOST))).fetch();
 
-
+        if (fetch.isEmpty()){
+            throw new RuntimeException("no host exception");
+        }
+        return fetch;
     }
 
 

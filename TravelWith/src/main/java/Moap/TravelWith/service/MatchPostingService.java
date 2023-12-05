@@ -84,13 +84,25 @@ public class MatchPostingService {
         postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
         postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingDetail(postingSearchDto);
-        return matchPostings.stream().map(MatchResponse::entityToDTO).toList();
+        List<MatchResponse> list = matchPostings.stream().map(MatchResponse::entityToDTO).toList();
+        list.forEach(matchResponse -> {
+            MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchResponse.getMatchId());
+            Member host = matchPostingRepository.findHost(matchPosting).get(0);
+            matchResponse.setHostName(host.getName());
+        });
+        return list;
 
     }
 
     public List<MatchResponse> searchMatchPostingWithString(String query){
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingWithString(query);
-        return matchPostings.stream().map(MatchResponse::entityToDTO).toList();
+        List<MatchResponse> list = matchPostings.stream().map(MatchResponse::entityToDTO).toList();
+        list.forEach(matchResponse -> {
+            MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchResponse.getMatchId());
+            Member host = matchPostingRepository.findHost(matchPosting).get(0);
+            matchResponse.setHostName(host.getName());
+        });
+        return list;
 
     }
 
