@@ -94,6 +94,12 @@ public class MatchPostingRepository {
         List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
         return list.stream().filter((i) -> i.getNumOfPeoples() <= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
     }
+    //내가 참여한 모든 진행중인(미성사) matchPosting 작성
+    public List<MatchPosting> findAllMatchPostingProgress(Long memberId) {
+        List<MatchStatus> fetch = jqf.selectFrom(qMatchStatus).where(qMatchStatus.member.id.eq(memberId)).fetch();
+        List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
+        return list.stream().filter((i) -> i.getNumOfPeoples() > this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
+    }
 
     public List<Member> findMatchingJoiner(MatchPosting matchPosting) {
         return jqf.select(qMatchStatus.member).from(qMatchStatus)

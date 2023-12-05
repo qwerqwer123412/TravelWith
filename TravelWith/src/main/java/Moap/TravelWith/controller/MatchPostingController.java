@@ -29,6 +29,7 @@ public class MatchPostingController {
 
     private final MatchPostingService matchPostingService;
     private final LoginCheckRepository loginCheckRepository;
+    private String email;
 
 
     //매칭글 작성
@@ -87,10 +88,11 @@ public class MatchPostingController {
 
     }
 
+    //나의 매칭 링스트
 
-
+    //종료된것 부터
     @GetMapping("/ended-match")
-    public List<MatchPosting> endedMatch(@RequestHeader String email) {
+    public List<MatchResponse> endedMatch(@RequestHeader String email) {
         loginCheck(email);
         return matchPostingService.findEndedMyMatchPosting(email);
     }
@@ -113,6 +115,14 @@ public class MatchPostingController {
         matchPostingService.assessMember(dto.getMemberId(), dto.getAssessedMemberId(), dto.getMatchId()
                 , dto.getPoints());
         return "평가 성공";
+    }
+
+    //현재 진행형인 매칭리스트들
+    @GetMapping("/progress-match")
+    public List<MatchResponse> progressMatch(@RequestHeader String email) {
+        this.email = email;
+        loginCheck(email);
+        return matchPostingService.findProgressMyMatchPosting(email);
     }
 
 

@@ -36,15 +36,15 @@ public class MatchPostingService {
 
     //매칭글 작성
     @Transactional
-    public void writeMatchPosting(MatchPostingWrite matchPostingWrite, String memberEmail){
+    public void writeMatchPosting(MatchPostingWrite matchPostingWrite, String memberEmail) {
 
         Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
-        if (byEmail.isEmpty()){
+        if (byEmail.isEmpty()) {
             throw new RuntimeException("No member Exception");
         }
         Member writer = byEmail.get();
         MatchPosting matchPosting = MatchPostingWrite.entityToDTO(matchPostingWrite);
-        if (matchPosting == null){
+        if (matchPosting == null) {
             throw new RuntimeException("No matchPosting Exception");
         }
         matchPostingRepository.joinMatchPosting(matchPosting);
@@ -55,18 +55,18 @@ public class MatchPostingService {
 
     //매칭글 참여
     @Transactional
-    public void joinMatch(String email, Long matchPostingId){
+    public void joinMatch(String email, Long matchPostingId) {
         Optional<Member> byEmail = memberRepository.findByEmail(email);
 
-        if (!byEmail.isPresent()){
+        if (!byEmail.isPresent()) {
             throw new RuntimeException("No member Exception");
         }
         Member member = byEmail.get();
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchPostingId);
-        if (matchPosting == null){
+        if (matchPosting == null) {
             throw new RuntimeException("No matchPosting Exception");
         }
-        if( matchPostingRepository.findMatchPeoplesNumber(matchPosting)>= matchPosting.getNumOfPeoples()){
+        if (matchPostingRepository.findMatchPeoplesNumber(matchPosting) >= matchPosting.getNumOfPeoples()) {
             throw new RuntimeException("자리가 꽉 찼습니다");
         }
         MatchStatus matchStatus = MatchStatus.makeEntity(member, matchPosting, MatchRole.PARTICIPANT);
@@ -78,24 +78,23 @@ public class MatchPostingService {
 
 
     //매칭글 검색
-    public List<MatchResponse> searchMatchPostingWithCondition(PostingSearchDto postingSearchDto){
+    public List<MatchResponse> searchMatchPostingWithCondition(PostingSearchDto postingSearchDto) {
         postingSearchDto.setStartDate(Optional.ofNullable(postingSearchDto.getStartDate()).orElse(LocalDate.of(1900, 1, 1)));
         postingSearchDto.setEndDate(Optional.ofNullable(postingSearchDto.getEndDate()).orElse(LocalDate.of(2200, 1, 1)));
         postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
         postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingDetail(postingSearchDto);
-        List<MatchResponse> list = matchPostings.stream().map(MatchResponse::entityToDTO).toList();
-        list.forEach(matchResponse -> {
-            MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchResponse.getMatchId());
-            Member host = matchPostingRepository.findHost(matchPosting).get(0);
-            matchResponse.setHostName(host.getName());
-        });
-        return list;
+        return sethost(matchPostings);
 
     }
 
-    public List<MatchResponse> searchMatchPostingWithString(String query){
+    public List<MatchResponse> searchMatchPostingWithString(String query) {
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingWithString(query);
+        return sethost(matchPostings);
+
+    }
+
+    private List<MatchResponse> sethost(List<MatchPosting> matchPostings) {
         List<MatchResponse> list = matchPostings.stream().map(MatchResponse::entityToDTO).toList();
         list.forEach(matchResponse -> {
             MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchResponse.getMatchId());
@@ -103,17 +102,16 @@ public class MatchPostingService {
             matchResponse.setHostName(host.getName());
         });
         return list;
-
     }
 
     //매칭글 detail정보 찾기
-    public MatchResponseDetail getDetailInfo(Long matchId){
+    public MatchResponseDetail getDetailInfo(Long matchId) {
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
-        if (matchPosting == null){
+        if (matchPosting == null) {
             throw new RuntimeException("존재하지 않는 matching글입니다");
         }
         List<Member> hosts = matchPostingRepository.findHost(matchPosting);
-        if (hosts.isEmpty()){
+        if (hosts.isEmpty()) {
             throw new RuntimeException("BAD REQUEST");
         }
         Member host = hosts.get(0);
@@ -124,48 +122,54 @@ public class MatchPostingService {
     }
 
     //종료된 매칭글 찾아주기
-    public List<MatchPosting> findEndedMyMatchPosting(String memberEmail){
+    public List<MatchResponse> findEndedMyMatchPosting(String memberEmail) {
         Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
-        if(byEmail.isEmpty()){
+        if (byEmail.isEmpty()) {
             throw new RuntimeException("No memberFind Exception");
         }
         Member member = byEmail.get();
-        return  matchPostingRepository.findAllEndedMatchPosting(member.getId());
+        List<MatchPosting> allEndedMatchPosting = matchPostingRepository.findAllEndedMatchPosting(member.getId());
+        return sethost(allEndedMatchPosting);
     }
 
-    public List<Member> findMatchPostingMembers(Long matchId){
+    public List<MatchResponse>findProgressMyMatchPosting(String memberEmail) {
+        Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
+        if (byEmail.isEmpty()) {
+            throw new RuntimeException("No memberFind Exception");
+        }
+        Member member = byEmail.get();
+        List<MatchPosting> allMatchPostingProgress = matchPostingRepository.findAllMatchPostingProgress(member.getId());
+
+        return sethost(allMatchPostingProgress);
+    }
+
+    public List<Member> findMatchPostingMembers(Long matchId) {
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
         return matchPostingRepository.findMatchingJoiner(matchPosting);
     }
 
     @Transactional
-    public void assessMember(Long loginMemberId, Long assessedMemberId, Long matchPostingId, Integer points){
+    public void assessMember(Long loginMemberId, Long assessedMemberId, Long matchPostingId, Integer points) {
         Member loginMember = memberRepository.findMemberById(loginMemberId);
         Member assessedMember = memberRepository.findMemberById(assessedMemberId);
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchPostingId);
-        if(loginMember == null || assessedMember == null){
+        if (loginMember == null || assessedMember == null) {
             throw new RuntimeException("No memberException");
         }
-        if (matchPosting == null ){
+        if (matchPosting == null) {
             throw new RuntimeException("No matchPostingException");
         }
         List<Assessment> asessment = matchPostingRepository.findAsessment(loginMember, assessedMember, matchPosting);
-        if (asessment.isEmpty()){
+        if (asessment.isEmpty()) {
             Assessment build = Assessment.builder().evaluator(loginMember).receiver(assessedMember).matchPosting(matchPosting).points(points).build();
             matchPostingRepository.joinAsessment(build);
-        }
-        else{
+        } else {
             Assessment assessment = asessment.get(0);
             assessment.setPoints(points);
         }
 
 
-
     }
-
-
-
-
 
 
 }
