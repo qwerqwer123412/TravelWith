@@ -3,6 +3,7 @@ package Moap.TravelWith.repository;
 
 import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.entity.*;
+import Moap.TravelWith.enumer.MatchRole;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class MatchPostingRepository {
         em.persist(matchStatus);
     }
 
-    public void joinAsessment(Assessment assessment){
+    public void joinAsessment(Assessment assessment) {
         em.persist(assessment);
     }
 
@@ -58,35 +59,66 @@ public class MatchPostingRepository {
     }
 
 
-    public List<MatchPosting> findMatchPosting(PostingSearchDto postingSearchDto) {
+    public List<MatchPosting> findMatchPostingDetail(PostingSearchDto postingSearchDto) {
         LocalDate startDate = postingSearchDto.getStartDate();
         LocalDate endDate = postingSearchDto.getEndDate();
         String query = postingSearchDto.getQuery();
         Integer money = postingSearchDto.getMoney();
-        List<MatchPosting> fetch = jqf.selectFrom(qMatchPosting)
-                .where(qMatchPosting.endDate.lt(endDate)
-                        .and(qMatchPosting.startDate.gt(startDate))
+
+
+        List<MatchPosting> fetch = jqf.select(qMatchPosting
+
+                ).from(qMatchPosting)
+                .where((qMatchPosting.endDate.lt(endDate).and(qMatchPosting.startDate.gt(startDate)))
                         .and(qMatchPosting.title.like("%" + query + "%"))
-                        .and(qMatchPosting.travelExpenses.lt(money)))
-                .fetch();
-        log.info(String.valueOf(fetch.size()));
-        List<MatchPosting> result = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
-        return result;
+                        .and(qMatchPosting.travelExpenses.lt(money))).fetch();
+
+
+        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
     }
 
+    public List<MatchPosting> findMatchPostingWithString(String query) {
+        List<MatchPosting> fetch = jqf
+                .select(qMatchPosting)
+                .from(qMatchPosting)
+                .where(qMatchPosting.title.like("%" + query + "%")).fetch();
+
+
+        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+    }
+
+
     //내가 참여한 모든 종료된(성사된) matchPosting 작성
-    public List<MatchPosting> findAllEndedMatchPosting(Long memberId){
+    public List<MatchPosting> findAllEndedMatchPosting(Long memberId) {
         List<MatchStatus> fetch = jqf.selectFrom(qMatchStatus).where(qMatchStatus.member.id.eq(memberId)).fetch();
         List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
         return list.stream().filter((i) -> i.getNumOfPeoples() <= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
     }
 
-    public List<Member> findEndMatchingJoiner(MatchPosting matchPosting){
+    public List<Member> findMatchingJoiner(MatchPosting matchPosting) {
         return jqf.select(qMatchStatus.member).from(qMatchStatus)
                 .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
                 .where(qMatchPosting.eq(matchPosting)).fetch();
     }
-    public List<Assessment> findAsessment(Member evaluator, Member assessedMember, MatchPosting matchPosting){
+
+
+    public List<Member> findHost(MatchPosting matchPosting){
+        return jqf.select(qMatchStatus.member).from(qMatchStatus)
+                .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
+                .where(qMatchPosting.eq(matchPosting).and(qMatchStatus.role.eq(MatchRole.HOST))).fetch();
+
+
+    }
+
+
+    public List<Member> findParticipant(MatchPosting matchPosting){
+        return jqf.select(qMatchStatus.member).from(qMatchStatus)
+                .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
+                .where(qMatchPosting.eq(matchPosting).and(qMatchStatus.role.eq(MatchRole.PARTICIPANT))).fetch();
+
+
+    }
+    public List<Assessment> findAsessment(Member evaluator, Member assessedMember, MatchPosting matchPosting) {
 
         return jqf.select(qAssessment).from(qAssessment)
                 .where(qAssessment.receiver.eq(assessedMember)

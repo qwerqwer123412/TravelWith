@@ -4,6 +4,8 @@ package Moap.TravelWith.controller;
 import Moap.TravelWith.dto.AssessmentSendsDTO;
 import Moap.TravelWith.dto.MatchPostingWrite;
 import Moap.TravelWith.dto.PostingSearchDto;
+import Moap.TravelWith.dto.match_response.MatchResponse;
+import Moap.TravelWith.dto.match_response.MatchResponseDetail;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
@@ -27,11 +29,11 @@ public class MatchPostingController {
     private final MatchPostingService matchPostingService;
     private final LoginCheckRepository loginCheckRepository;
 
+
+    //매칭글 작성
     @PostMapping("/write")
     public ResponseEntity<String> writing(@RequestBody MatchPostingWrite matchPostingWrite,
-                                          @RequestHeader String email
-
-    ) {
+                                          @RequestHeader String email) {
         loginCheck(email);
         matchPostingService.writeMatchPosting(matchPostingWrite, email);
 
@@ -39,10 +41,12 @@ public class MatchPostingController {
 
     }
 
+
+    //매칭글에 참여
     @PostMapping("/join/{matchPostingId}")
     public ResponseEntity<String> joining(
-                                          @PathVariable Long matchPostingId,
-                                          @RequestHeader String email) {
+            @PathVariable Long matchPostingId,
+            @RequestHeader String email) {
 
         loginCheck(email);
         matchPostingService.joinMatch(email, matchPostingId);
@@ -50,8 +54,10 @@ public class MatchPostingController {
 
     }
 
-    @GetMapping("/search")
-    public List<MatchPosting> search(
+
+    //매칭글에 검색 (조건이 있는 ..)
+    @GetMapping("/search-condition")
+    public List<MatchResponse> searchWithCondition(
             @RequestParam(name = "startDate", required = false) LocalDate startDate,
             @RequestParam(name = "endDate", required = false) LocalDate endDate,
             @RequestParam(name = "query", required = false) String query,
@@ -64,8 +70,22 @@ public class MatchPostingController {
                 .money(money)
                 .query(query)
                 .build();
-        return matchPostingService.searchMatchPosting(dto);
+        return matchPostingService.searchMatchPostingWithCondition(dto);
     }
+
+    @GetMapping("/search/{query}")
+    public List<MatchResponse> search(@PathVariable String query, @RequestHeader String email) {
+        loginCheck(email);
+        return matchPostingService.searchMatchPostingWithString(query);
+    }
+
+    @GetMapping("/search-detail/{matchId}")
+    public MatchResponseDetail getDetailInfo(@PathVariable Long matchId, @RequestHeader String email){
+        loginCheck(email);
+        return matchPostingService.getDetailInfo(matchId);
+
+    }
+
 
 
     @GetMapping("/ended-match")

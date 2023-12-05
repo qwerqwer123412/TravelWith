@@ -3,6 +3,9 @@ package Moap.TravelWith.service;
 
 import Moap.TravelWith.dto.MatchPostingWrite;
 import Moap.TravelWith.dto.PostingSearchDto;
+import Moap.TravelWith.dto.match_response.MatchResponse;
+import Moap.TravelWith.dto.match_response.MatchResponseDetail;
+import Moap.TravelWith.dto.match_response.MemberInfoDTO;
 import Moap.TravelWith.entity.Assessment;
 import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.MatchStatus;
@@ -31,19 +34,12 @@ public class MatchPostingService {
     private final MatchPostingRepository matchPostingRepository;
     private final MemberRepository memberRepository;
 
-    @Transactional
-    public void writeMatchPosting(MatchPostingWrite matchPostingWrite, Member writer){
-        MatchPosting matchPosting = MatchPostingWrite.entityToDTO(matchPostingWrite);
-        matchPostingRepository.joinMatchPosting(matchPosting);
-        MatchStatus matchStatus = MatchStatus.makeEntity(writer, matchPosting, MatchRole.HOST);
-        matchPostingRepository.joinMatchStatus(matchStatus);
-
-    }
+    //매칭글 작성
     @Transactional
     public void writeMatchPosting(MatchPostingWrite matchPostingWrite, String memberEmail){
 
         Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
-        if (!byEmail.isPresent()){
+        if (byEmail.isEmpty()){
             throw new RuntimeException("No member Exception");
         }
         Member writer = byEmail.get();
@@ -57,7 +53,7 @@ public class MatchPostingService {
 
     }
 
-    //여기까지 posting글 작성
+    //매칭글 참여
     @Transactional
     public void joinMatch(String email, Long matchPostingId){
         Optional<Member> byEmail = memberRepository.findByEmail(email);
@@ -80,13 +76,38 @@ public class MatchPostingService {
 
     }
 
-    public List<MatchPosting> searchMatchPosting(PostingSearchDto postingSearchDto){
+
+    //매칭글 검색
+    public List<MatchResponse> searchMatchPostingWithCondition(PostingSearchDto postingSearchDto){
         postingSearchDto.setStartDate(Optional.ofNullable(postingSearchDto.getStartDate()).orElse(LocalDate.of(1900, 1, 1)));
         postingSearchDto.setEndDate(Optional.ofNullable(postingSearchDto.getEndDate()).orElse(LocalDate.of(2200, 1, 1)));
         postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
         postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
-        return matchPostingRepository.findMatchPosting(postingSearchDto);
+        List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingDetail(postingSearchDto);
+        return matchPostings.stream().map(MatchResponse::entityToDTO).toList();
 
+    }
+
+    public List<MatchResponse> searchMatchPostingWithString(String query){
+        List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingWithString(query);
+        return matchPostings.stream().map(MatchResponse::entityToDTO).toList();
+
+    }
+
+    //매칭글 detail정보 찾기
+    public MatchResponseDetail getDetailInfo(Long matchId){
+        MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
+        if (matchPosting == null){
+            throw new RuntimeException("존재하지 않는 matching글입니다");
+        }
+        List<Member> hosts = matchPostingRepository.findHost(matchPosting);
+        if (hosts.isEmpty()){
+            throw new RuntimeException("BAD REQUEST");
+        }
+        Member host = hosts.get(0);
+        List<Member> participant = matchPostingRepository.findParticipant(matchPosting);
+        List<MemberInfoDTO> participants = participant.stream().map(MemberInfoDTO::entityToDto).toList();
+        return MatchResponseDetail.builder().matchPosting(matchPosting).host(MemberInfoDTO.entityToDto(host)).participants(participants).build();
 
     }
 
@@ -102,7 +123,7 @@ public class MatchPostingService {
 
     public List<Member> findMatchPostingMembers(Long matchId){
         MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
-        return matchPostingRepository.findEndMatchingJoiner(matchPosting);
+        return matchPostingRepository.findMatchingJoiner(matchPosting);
     }
 
     @Transactional
