@@ -78,19 +78,22 @@ public class MatchPostingService {
 
 
     //매칭글 검색
-    public List<MatchResponse> searchMatchPostingWithCondition(PostingSearchDto postingSearchDto) {
+    public List<MatchResponseDetail> searchMatchPostingWithCondition(PostingSearchDto postingSearchDto) {
         postingSearchDto.setStartDate(Optional.ofNullable(postingSearchDto.getStartDate()).orElse(LocalDate.of(1900, 1, 1)));
         postingSearchDto.setEndDate(Optional.ofNullable(postingSearchDto.getEndDate()).orElse(LocalDate.of(2200, 1, 1)));
         postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
         postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingDetail(postingSearchDto);
-        return sethost(matchPostings);
+
+        return matchPostings.stream().map(matchPosting -> this.getDetailInfo(matchPosting.getId())).toList();
+
+
 
     }
 
-    public List<MatchResponse> searchMatchPostingWithString(String query) {
+    public List<MatchResponseDetail> searchMatchPostingWithString(String query) {
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingWithString(query);
-        return sethost(matchPostings);
+        return matchPostings.stream().map(matchPosting -> this.getDetailInfo(matchPosting.getId())).toList();
 
     }
 
@@ -105,42 +108,32 @@ public class MatchPostingService {
     }
 
     //매칭글 detail정보 찾기
-    public MatchResponseDetail getDetailInfo(Long matchId) {
-        MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
-        if (matchPosting == null) {
-            throw new RuntimeException("존재하지 않는 matching글입니다");
-        }
-        List<Member> hosts = matchPostingRepository.findHost(matchPosting);
-        if (hosts.isEmpty()) {
-            throw new RuntimeException("BAD REQUEST");
-        }
-        Member host = hosts.get(0);
-        List<Member> participant = matchPostingRepository.findParticipant(matchPosting);
-        List<MemberInfoDTO> participants = participant.stream().map(MemberInfoDTO::entityToDto).toList();
-        return MatchResponseDetail.builder().matchPosting(matchPosting).host(MemberInfoDTO.entityToDto(host)).participants(participants).build();
 
-    }
 
     //종료된 매칭글 찾아주기
-    public List<MatchResponse> findEndedMyMatchPosting(String memberEmail) {
+    public List<MatchResponseDetail> findEndedMyMatchPosting(String memberEmail) {
         Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
         if (byEmail.isEmpty()) {
             throw new RuntimeException("No memberFind Exception");
         }
         Member member = byEmail.get();
-        List<MatchPosting> allEndedMatchPosting = matchPostingRepository.findAllEndedMatchPosting(member.getId());
-        return sethost(allEndedMatchPosting);
+        List<MatchPosting> matchPostings = matchPostingRepository.findAllEndedMatchPosting(member.getId());
+
+        return matchPostings.stream().map(matchPosting -> this.getDetailInfo(matchPosting.getId())).toList();
+
     }
 
-    public List<MatchResponse>findProgressMyMatchPosting(String memberEmail) {
+    public List<MatchResponseDetail>findProgressMyMatchPosting(String memberEmail) {
         Optional<Member> byEmail = memberRepository.findByEmail(memberEmail);
         if (byEmail.isEmpty()) {
             throw new RuntimeException("No memberFind Exception");
         }
         Member member = byEmail.get();
-        List<MatchPosting> allMatchPostingProgress = matchPostingRepository.findAllMatchPostingProgress(member.getId());
+        List<MatchPosting> matchPostings = matchPostingRepository.findAllMatchPostingProgress(member.getId());
 
-        return sethost(allMatchPostingProgress);
+        List<MatchResponseDetail> list = matchPostings.stream().map(matchPosting -> this.getDetailInfo(matchPosting.getId())).toList();
+        return list.stream().filter(matchResponseDetail -> matchResponseDetail.getEndDate().isAfter(LocalDate.now())).toList();
+
     }
 
     public List<Member> findMatchPostingMembers(Long matchId) {
@@ -171,5 +164,34 @@ public class MatchPostingService {
 
     }
 
+
+
+
+
+
+    public MatchResponseDetail getDetailInfo(Long matchId) {
+        MatchPosting matchPosting = matchPostingRepository.findMatchPostingById(matchId);
+        if (matchPosting == null) {
+            throw new RuntimeException("존재하지 않는 matching글입니다");
+        }
+        List<Member> hosts = matchPostingRepository.findHost(matchPosting);
+        if (hosts.isEmpty()) {
+            throw new RuntimeException("BAD REQUEST");
+        }
+        Member host = hosts.get(0);
+        List<Member> participant = matchPostingRepository.findParticipant(matchPosting);
+        List<MemberInfoDTO> participants = participant.stream().map(MemberInfoDTO::entityToDto).toList();
+        return MatchResponseDetail.builder().startDate(matchPosting.getStartDate())
+                .matchId(matchPosting.getId())
+                .endDate(matchPosting.getEndDate())
+                .title(matchPosting.getTitle())
+                .contents(matchPosting.getContents())
+                .travelExpenses(matchPosting.getTravelExpenses())
+                .numOfPeoples(matchPosting.getNumOfPeoples())
+                .isAccommodationTogether(matchPosting.getIsAccommodationTogether())
+                .isDiningTogether(matchPosting.getIsDiningTogether())
+                .host(MemberInfoDTO.entityToDto(host)).participants(participants).build();
+
+    }
 
 }

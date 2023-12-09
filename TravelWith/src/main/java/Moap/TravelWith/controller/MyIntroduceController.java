@@ -69,7 +69,6 @@ public class MyIntroduceController {
 
                 response.setId(member.getId());
                 response.setName(member.getName());
-                response.setProfileImg(member.getProfileImg());
                 response.setGender(member.getGender().toString());
                 response.setTitle(myIntroduce.getTitle());
                 response.setContents(myIntroduce.getContents());

@@ -7,7 +7,6 @@ import Moap.TravelWith.dto.PostingSearchDto;
 import Moap.TravelWith.dto.match_response.MatchResponse;
 import Moap.TravelWith.dto.match_response.MatchResponseDetail;
 import Moap.TravelWith.dto.match_response.MemberInfoDTO;
-import Moap.TravelWith.entity.MatchPosting;
 import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
 import Moap.TravelWith.repository.LoginCheckRepository;
@@ -29,7 +28,6 @@ public class MatchPostingController {
 
     private final MatchPostingService matchPostingService;
     private final LoginCheckRepository loginCheckRepository;
-    private String email;
 
 
     //매칭글 작성
@@ -59,7 +57,7 @@ public class MatchPostingController {
 
     //매칭글에 검색 (조건이 있는 ..)
     @GetMapping("/search-condition")
-    public List<MatchResponse> searchWithCondition(
+    public List<MatchResponseDetail> searchWithCondition(
             @RequestParam(name = "startDate", required = false) LocalDate startDate,
             @RequestParam(name = "endDate", required = false) LocalDate endDate,
             @RequestParam(name = "query", required = false) String query,
@@ -76,35 +74,35 @@ public class MatchPostingController {
     }
 
     @GetMapping("/search/{query}")
-    public List<MatchResponse> search(@PathVariable String query, @RequestHeader String email) {
+    public List<MatchResponseDetail> search(@PathVariable(required = false) String query, @RequestHeader String email) {
         loginCheck(email);
+
         return matchPostingService.searchMatchPostingWithString(query);
     }
+    @GetMapping("/search")
+    public List<MatchResponseDetail> search_empty(@RequestHeader String email) {
+        loginCheck(email);
 
-    @GetMapping("/search-detail/{matchId}")
+        return matchPostingService.searchMatchPostingWithString("");
+    }
+
+
+    /*@GetMapping("/search-detail/{matchId}")
     public MatchResponseDetail getDetailInfo(@PathVariable Long matchId, @RequestHeader String email){
         loginCheck(email);
         return matchPostingService.getDetailInfo(matchId);
 
-    }
+    }*/
 
     //나의 매칭 링스트
 
     //종료된것 부터
     @GetMapping("/ended-match")
-    public List<MatchResponse> endedMatch(@RequestHeader String email) {
+    public List<MatchResponseDetail> endedMatch(@RequestHeader String email) {
         loginCheck(email);
         return matchPostingService.findEndedMyMatchPosting(email);
     }
 
-    @GetMapping("/ended-match/{matchId}")
-    public List<MemberInfoDTO> endedMatchMembers(
-            @PathVariable Long matchId,
-            @RequestHeader String email) {
-        loginCheck(email);
-        List<Member> matchPostingMembers = matchPostingService.findMatchPostingMembers(matchId);
-        return matchPostingMembers.stream().map(MemberInfoDTO::entityToDto).toList();
-    }
 
     @PostMapping("/ended-match/assessment")
     public String assessment(@RequestBody
@@ -119,8 +117,8 @@ public class MatchPostingController {
 
     //현재 진행형인 매칭리스트들
     @GetMapping("/progress-match")
-    public List<MatchResponse> progressMatch(@RequestHeader String email) {
-        this.email = email;
+    public List<MatchResponseDetail> progressMatch(@RequestHeader String email) {
+
         loginCheck(email);
         return matchPostingService.findProgressMyMatchPosting(email);
     }
