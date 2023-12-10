@@ -1,8 +1,8 @@
 package Moap.TravelWith.controller;
 
-import Moap.TravelWith.dto.MessageDTO;
-import Moap.TravelWith.dto.MessageDetailDTO;
-import Moap.TravelWith.dto.MessageListDTO;
+import Moap.TravelWith.dto.messageDTO.write.MessageDetailDTO;
+import Moap.TravelWith.dto.messageDTO.MessagePreview;
+import Moap.TravelWith.dto.messageDTO.write.MessageWriteDTO;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
 import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.service.MessageService;
@@ -26,31 +26,29 @@ public class MessageController {
 
     @PostMapping("/write")
     public ResponseEntity<?> sendMessage(@RequestHeader String email,
-                                         @RequestBody MessageDTO messageDTO) {
+                                         @RequestBody MessageWriteDTO meesageWriteDTO) {
         loginCheck(email);
-        messageService.sendMessage(email, messageDTO);
+        log.info("1");
+        messageService.sendMessage(email, meesageWriteDTO);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/send")
-    public ResponseEntity<List<MessageListDTO>> getSentMessages(@RequestHeader String email) {
+    @GetMapping("/list")
+    public ResponseEntity<List<MessagePreview>> getMessagePreview(@RequestHeader String email){
         loginCheck(email);
-        return ResponseEntity.ok(messageService.getSentMessages(email));
-    }
 
-    @GetMapping("/receive")
-    public ResponseEntity<List<MessageListDTO>> getReceivedMessages(@RequestHeader String email) {
-        loginCheck(email);
-        return ResponseEntity.ok(messageService.getReceivedMessages(email));
+        List<MessagePreview> messagePreviewList = messageService.findMessagePreviewList(email);
+        return ResponseEntity.ok(messagePreviewList);
     }
-
-    @GetMapping("/{messageId}")
-    public ResponseEntity<MessageDetailDTO> getMessageDetails(@PathVariable Long messageId,
+    @GetMapping("/{othersEmail}")
+    public ResponseEntity<List<MessageDetailDTO>> getMessageDetails(@PathVariable String othersEmail,
                                                               @RequestHeader String email) throws AccessDeniedException {
         loginCheck(email);
-        MessageDetailDTO messageDetails = messageService.getMessageDetails(messageId, email);
-        return ResponseEntity.ok(messageDetails);
+        List<MessageDetailDTO> messageWithOthersEmail = messageService.getMessageWithOthersEmail(othersEmail, email);
+        return ResponseEntity.ok(messageWithOthersEmail);
     }
+
+
 
     private void loginCheck(String email) {
         if (loginCheckRepository.findLoginCheckByEmail(email).isEmpty()) {

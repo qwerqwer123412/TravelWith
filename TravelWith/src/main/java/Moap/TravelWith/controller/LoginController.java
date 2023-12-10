@@ -1,11 +1,13 @@
 package Moap.TravelWith.controller;
 
 import Moap.TravelWith.dto.MemberDTO;
+import Moap.TravelWith.dto.MyPageDTO;
 import Moap.TravelWith.entity.LoginCheck;
 import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
 import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.repository.MemberRepository;
+import Moap.TravelWith.service.MyIntroduceService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ public class LoginController {
 
     private final MemberRepository memberRepository;
     private final LoginCheckRepository loginCheckRepository;
-
+    private final MyIntroduceService myIntroduceService;
 
     //로그인
     @PostMapping("/login")
@@ -72,27 +74,9 @@ public class LoginController {
         }
     }
 
-    /*
-    // 로그인 사용자 인식 - 테스트용
-    @GetMapping("/current-user")
-    public ResponseEntity<?> getCurrentUser(HttpSession session, @RequestHeader String email) {
-        loginCheck(email);
-        Long memberId = (Long) session.getAttribute("memberId");
 
-        if (memberId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No user is currently logged in.");
-        } else {
-            Optional<Member> memberOptional = memberRepository.findById(memberId);
-            if (memberOptional.isPresent()) {
-                Member member = memberOptional.get();
-                MemberDTO memberProfile = new MemberDTO(member.getId(), member.getEmail(), member.getName());
-                return ResponseEntity.ok(memberProfile);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-            }
-        }
-    }
-    */
+    // 로그인 사용자 인식 - 테스트용
+
 
 
     private void loginCheck(String email){

@@ -70,19 +70,22 @@ public class MatchPostingRepository {
         if (query.isEmpty()) {
             fetch = jqf.select(qMatchPosting).from(qMatchPosting)
                     .where((qMatchPosting.endDate.loe(endDate).and(qMatchPosting.startDate.goe(startDate)))
-                            .and(qMatchPosting.travelExpenses.lt(money))).fetch();
+                            .and(qMatchPosting.travelExpenses.loe(money))).fetch();
 
-
+            log.info("without string");
         } else {
             fetch = jqf.select(qMatchPosting
                     ).from(qMatchPosting)
                     .where((qMatchPosting.endDate.loe(endDate).and(qMatchPosting.startDate.goe(startDate)))
                             .and(qMatchPosting.title.like("%" + query + "%"))
-                            .and(qMatchPosting.travelExpenses.lt(money))).fetch();
+                            .and(qMatchPosting.travelExpenses.loe(money))).fetch();
+            log.info("with string");
         }
 
-
+        log.info("11111111111111111111111111");
         fetch = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        fetch.forEach(System.out::println);
+        log.info("122222222222222222222222");
         return fetch.stream().filter(matchPosting -> matchPosting.getEndDate().isEqual(LocalDate.now()) ||
                 matchPosting.getEndDate().isAfter(LocalDate.now())).toList();
     }

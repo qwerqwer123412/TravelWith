@@ -1,3 +1,4 @@
+
 package Moap.TravelWith.repository;
 
 import Moap.TravelWith.entity.Member;
@@ -15,3 +16,4 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     // 수신자를 기준으로 쪽지를 찾는 메소드
     List<Message> findByReceiver(Member receiver);
 }
+

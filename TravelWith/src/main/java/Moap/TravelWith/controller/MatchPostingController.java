@@ -66,12 +66,13 @@ public class MatchPostingController {
         loginCheck(email);
 
 
+
         LocalDate startDate1 = null;
-        if (startDate != null && !startDate.equalsIgnoreCase("null")) {
+        if (!startDate.isEmpty()) {
             startDate1 = LocalDate.parse(startDate);
         }
         LocalDate endDate1 = null;
-        if (endDate != null && !endDate.equalsIgnoreCase("null")) {
+        if (!endDate.isEmpty()) {
             endDate1 = LocalDate.parse(endDate);
         }
         PostingSearchDto dto = PostingSearchDto.builder()

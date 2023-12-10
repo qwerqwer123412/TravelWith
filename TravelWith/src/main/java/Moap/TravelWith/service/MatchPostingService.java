@@ -83,8 +83,10 @@ public class MatchPostingService {
         postingSearchDto.setEndDate(Optional.ofNullable(postingSearchDto.getEndDate()).orElse(LocalDate.of(2200, 1, 1)));
         postingSearchDto.setMoney(Optional.ofNullable(postingSearchDto.getMoney()).orElse(Integer.MAX_VALUE));
         postingSearchDto.setQuery(Optional.ofNullable(postingSearchDto.getQuery()).orElse(""));
+        System.out.println(postingSearchDto);
         List<MatchPosting> matchPostings = matchPostingRepository.findMatchPostingDetail(postingSearchDto);
 
+        matchPostings.forEach(System.out::println);
         return matchPostings.stream().map(matchPosting -> this.getDetailInfo(matchPosting.getId())).toList();
 
 

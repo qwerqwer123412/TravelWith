@@ -1,5 +1,6 @@
 package Moap.TravelWith.controller;
 
+import Moap.TravelWith.dto.MyPageDTO;
 import Moap.TravelWith.dto.signup.SignupDTO;
 import Moap.TravelWith.entity.Member;
 import Moap.TravelWith.exception.NoLoginMemberFoundException;
@@ -7,6 +8,7 @@ import Moap.TravelWith.repository.LoginCheckRepository;
 import Moap.TravelWith.repository.MemberRepository;
 import Moap.TravelWith.service.ImageService;
 import Moap.TravelWith.service.MemberService;
+import Moap.TravelWith.service.MyIntroduceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class MemberController {
     private final MemberRepository memberRepository;
     private final LoginCheckRepository loginCheckRepository;
     private final ImageService imageService;
-
+    private final MyIntroduceService myIntroduceService;
 
 
     // 회원가입
@@ -45,7 +47,13 @@ public class MemberController {
         String returnURL = imageService.changeProfileImg(file, member);
         return ResponseEntity.status(HttpStatus.OK).body(returnURL);
     }
+    @GetMapping("/current-user")
+    public ResponseEntity<MyPageDTO> getCurrentUser(@RequestHeader String email) {
+        loginCheck(email);
+        MyPageDTO myPageDTO = myIntroduceService.myPage(email);
+        return ResponseEntity.ok().body(myPageDTO);
 
+    }
 
     private void loginCheck(String email) {
         if (loginCheckRepository.findLoginCheckByEmail(email).isEmpty()) {
