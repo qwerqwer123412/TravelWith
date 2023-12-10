@@ -26,6 +26,7 @@ public class MemberInfoDTO {
         return MemberInfoDTO.builder()
                 .id(member.getId())
                 .name(member.getName())
+                .email(member.getEmail())
                 .phoneNumber(member.getPhoneNumber())
                 .profileImg(member.getProfileImg())
                 .birthDate(member.getBirthDate())

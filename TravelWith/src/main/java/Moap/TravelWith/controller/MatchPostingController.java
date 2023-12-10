@@ -58,15 +58,25 @@ public class MatchPostingController {
     //매칭글에 검색 (조건이 있는 ..)
     @GetMapping("/search-condition")
     public List<MatchResponseDetail> searchWithCondition(
-            @RequestParam(name = "startDate", required = false) LocalDate startDate,
-            @RequestParam(name = "endDate", required = false) LocalDate endDate,
+            @RequestParam(name = "startDate", required = false) String startDate,
+            @RequestParam(name = "endDate", required = false) String endDate,
             @RequestParam(name = "query", required = false) String query,
             @RequestParam(name = "money", required = false) Integer money
             , @RequestHeader String email) {
         loginCheck(email);
+
+
+        LocalDate startDate1 = null;
+        if (startDate != null && !startDate.equalsIgnoreCase("null")) {
+            startDate1 = LocalDate.parse(startDate);
+        }
+        LocalDate endDate1 = null;
+        if (endDate != null && !endDate.equalsIgnoreCase("null")) {
+            endDate1 = LocalDate.parse(endDate);
+        }
         PostingSearchDto dto = PostingSearchDto.builder()
-                .startDate(startDate)
-                .endDate(endDate)
+                .startDate(startDate1)
+                .endDate(endDate1)
                 .money(money)
                 .query(query)
                 .build();

@@ -190,6 +190,7 @@ public class MatchPostingService {
                 .numOfPeoples(matchPosting.getNumOfPeoples())
                 .isAccommodationTogether(matchPosting.getIsAccommodationTogether())
                 .isDiningTogether(matchPosting.getIsDiningTogether())
+                .mainTravelSpace(matchPosting.getMainTravelSpace())
                 .host(MemberInfoDTO.entityToDto(host)).participants(participants).build();
 
     }
