@@ -66,25 +66,50 @@ public class MatchPostingRepository {
         Integer money = postingSearchDto.getMoney();
 
 
-        List<MatchPosting> fetch = jqf.select(qMatchPosting
+        List<MatchPosting> fetch;
+        if (query.isEmpty()) {
+            fetch = jqf.select(qMatchPosting).from(qMatchPosting)
+                    .where((qMatchPosting.endDate.loe(endDate).and(qMatchPosting.startDate.goe(startDate)))
+                            .and(qMatchPosting.travelExpenses.lt(money))).fetch();
 
-                ).from(qMatchPosting)
-                .where((qMatchPosting.endDate.lt(endDate).and(qMatchPosting.startDate.gt(startDate)))
-                        .and(qMatchPosting.title.like("%" + query + "%"))
-                        .and(qMatchPosting.travelExpenses.lt(money))).fetch();
+
+        } else {
+            fetch = jqf.select(qMatchPosting
+                    ).from(qMatchPosting)
+                    .where((qMatchPosting.endDate.loe(endDate).and(qMatchPosting.startDate.goe(startDate)))
+                            .and(qMatchPosting.title.like("%" + query + "%"))
+                            .and(qMatchPosting.travelExpenses.lt(money))).fetch();
+        }
 
 
-        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        fetch = fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        return fetch.stream().filter(matchPosting -> matchPosting.getEndDate().isEqual(LocalDate.now()) ||
+                matchPosting.getEndDate().isAfter(LocalDate.now())).toList();
     }
 
     public List<MatchPosting> findMatchPostingWithString(String query) {
-        List<MatchPosting> fetch = jqf
-                .select(qMatchPosting)
-                .from(qMatchPosting)
-                .where(qMatchPosting.title.like("%" + query + "%")).fetch();
 
+        List<MatchPosting> fetch;
+        if (query.isEmpty() ) {
+            fetch = jqf
+                    .select(qMatchPosting)
+                    .from(qMatchPosting).fetch();
 
-        return fetch.stream().filter(i -> findMatchPeoplesNumber(i) <= i.getNumOfPeoples()).toList();
+        } else {
+            fetch = jqf
+                    .select(qMatchPosting)
+                    .from(qMatchPosting)
+                    .where(qMatchPosting.title.like("%" + query + "%")).fetch();
+        }
+
+        log.info("hi");
+        fetch = fetch.stream().filter(i -> {
+
+            System.out.println(i.getNumOfPeoples());
+            System.out.println(findMatchPeoplesNumber(i));
+            return findMatchPeoplesNumber(i) <= i.getNumOfPeoples();}).toList();
+        return fetch.stream().filter(matchPosting -> matchPosting.getEndDate().isEqual(LocalDate.now()) ||
+                matchPosting.getEndDate().isAfter(LocalDate.now())).toList();
     }
 
 
@@ -94,6 +119,7 @@ public class MatchPostingRepository {
         List<MatchPosting> list = fetch.stream().map(MatchStatus::getMatchPosting).toList();
         return list.stream().filter((i) -> i.getNumOfPeoples() <= this.findMatchPeoplesNumber(i)).collect(Collectors.toSet()).stream().toList();
     }
+
     //내가 참여한 모든 진행중인(미성사) matchPosting 작성
     public List<MatchPosting> findAllMatchPostingProgress(Long memberId) {
         List<MatchStatus> fetch = jqf.selectFrom(qMatchStatus).where(qMatchStatus.member.id.eq(memberId)).fetch();
@@ -108,25 +134,26 @@ public class MatchPostingRepository {
     }
 
 
-    public List<Member> findHost(MatchPosting matchPosting){
+    public List<Member> findHost(MatchPosting matchPosting) {
         List<Member> fetch = jqf.select(qMatchStatus.member).from(qMatchStatus)
                 .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
                 .where(qMatchPosting.eq(matchPosting).and(qMatchStatus.role.eq(MatchRole.HOST))).fetch();
 
-        if (fetch.isEmpty()){
+        if (fetch.isEmpty()) {
             throw new RuntimeException("no host exception");
         }
         return fetch;
     }
 
 
-    public List<Member> findParticipant(MatchPosting matchPosting){
+    public List<Member> findParticipant(MatchPosting matchPosting) {
         return jqf.select(qMatchStatus.member).from(qMatchStatus)
                 .innerJoin(qMatchStatus.matchPosting, qMatchPosting)
                 .where(qMatchPosting.eq(matchPosting).and(qMatchStatus.role.eq(MatchRole.PARTICIPANT))).fetch();
 
 
     }
+
     public List<Assessment> findAsessment(Member evaluator, Member assessedMember, MatchPosting matchPosting) {
 
         return jqf.select(qAssessment).from(qAssessment)

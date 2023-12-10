@@ -7,6 +7,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 public class MatchPosting {
 
@@ -39,6 +41,9 @@ public class MatchPosting {
 
     //예를 들면 서울특별시 중구 봉래동1가 111-3
     private String mainTravelSpace;
+
+    private String imgURL;
+
 
     @Builder
     public MatchPosting(LocalDate startDate, LocalDate endDate, String title, String contents, Integer travelExpenses, Integer numOfPeoples, Boolean isAccommodationTogether, Boolean isDiningTogether, String mainTravelSpace) {

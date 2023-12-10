@@ -2,20 +2,20 @@ package Moap.TravelWith.entity;
 
 
 import Moap.TravelWith.enumer.Gender;
-import Moap.TravelWith.enumer.Nationality;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.time.LocalDate;
 
 @Entity
 @Getter
 @NoArgsConstructor
+
 public class Member {
 
     @Id
@@ -27,7 +27,7 @@ public class Member {
     private String password;
     private String name;
     private String phoneNumber;
-    private byte[] profileImg;
+    private String profileImg = "https://tobehonest.s3.ap-northeast-2.amazonaws.com/default.jpeg";
     private LocalDate birthDate;
 
     private Gender gender;
@@ -36,5 +36,18 @@ public class Member {
     //생략 가능..
     //private Nationality nationality;
 
+    public void changeProfileImg(String url){
+        this.profileImg = url;
+    }
+    @Builder
+    public Member(Long id, String email, String password, String name, String phoneNumber, LocalDate birthDate, Gender gender) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.birthDate = birthDate;
+        this.gender = gender;
+    }
 }
 
