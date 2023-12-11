@@ -47,7 +47,7 @@ public class MemberController {
         String returnURL = imageService.changeProfileImg(file, member);
         return ResponseEntity.status(HttpStatus.OK).body(returnURL);
     }
-    @GetMapping("/current-user")
+    @GetMapping("/my-page")
     public ResponseEntity<MyPageDTO> getCurrentUser(@RequestHeader String email) {
         loginCheck(email);
         MyPageDTO myPageDTO = myIntroduceService.myPage(email);

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 public class MessageWriteDTO {
 
     private String receiverEmail;
-    private String title;
+    private String title = "default";
     private String contents;
 
 

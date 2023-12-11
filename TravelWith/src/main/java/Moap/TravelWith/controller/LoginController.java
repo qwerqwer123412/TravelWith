@@ -10,6 +10,7 @@ import Moap.TravelWith.repository.MemberRepository;
 import Moap.TravelWith.service.MyIntroduceService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class LoginController {
 
     private final MemberRepository memberRepository;
@@ -48,6 +50,7 @@ public class LoginController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader String email) {
         loginCheck(email);
+        log.info("email");
         loginCheckRepository.findLoginCheckByEmail(email).orElseThrow(() -> new RuntimeException("no MemberFindException"));
         return ResponseEntity.ok().body("Logged out successfully.");
     }
